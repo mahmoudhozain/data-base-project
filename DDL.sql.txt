@@ -1,0 +1,72 @@
+-- Create Customers Table
+CREATE TABLE Customers (
+    CustomerID INT PRIMARY KEY IDENTITY(1,1),
+    CustomerName NVARCHAR(100) NOT NULL,
+    Email NVARCHAR(100) UNIQUE NOT NULL,
+    RegistrationDate DATE DEFAULT GETDATE(),
+    ShippingAddress NVARCHAR(255)
+);
+
+-- Create Categories Table
+CREATE TABLE Categories (
+    CategoryID INT PRIMARY KEY IDENTITY(1,1),
+    CategoryName NVARCHAR(100) UNIQUE NOT NULL
+);
+
+-- Create Suppliers Table
+CREATE TABLE Suppliers (
+    SupplierID INT PRIMARY KEY IDENTITY(1,1),
+    SupplierName NVARCHAR(100) UNIQUE NOT NULL,
+    ContactPerson NVARCHAR(100),
+    PhoneNumber NVARCHAR(20)
+);
+
+-- Create Products Table
+CREATE TABLE Products (
+    ProductID INT PRIMARY KEY IDENTITY(1,1),
+    ProductName NVARCHAR(100) NOT NULL,
+    Description NVARCHAR(500),
+    Price DECIMAL(10, 2) CHECK (Price > 0),
+    CategoryID INT,
+    SupplierID INT,
+    CONSTRAINT FK_Products_Categories FOREIGN KEY (CategoryID) REFERENCES Categories(CategoryID) ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT FK_Products_Suppliers FOREIGN KEY (SupplierID) REFERENCES Suppliers(SupplierID) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+-- Create Inventory Table
+CREATE TABLE Inventory (
+    ProductID INT PRIMARY KEY,
+    StockQuantity INT CHECK (StockQuantity >= 0),
+    LastRestockDate DATE,
+    CONSTRAINT FK_Inventory_Products FOREIGN KEY (ProductID) REFERENCES Products(ProductID) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+-- Create Orders Table
+CREATE TABLE Orders (
+    OrderID INT PRIMARY KEY IDENTITY(1,1),
+    OrderDate DATETIME DEFAULT GETDATE(),
+    Status NVARCHAR(20) CHECK (Status IN ('Pending', 'Processing', 'Shipped', 'Delivered', 'Canceled')),
+    CustomerID INT,
+    CONSTRAINT FK_Orders_Customers FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+-- Create OrderItems Linking Table
+CREATE TABLE OrderItems (
+    OrderItemID INT PRIMARY KEY IDENTITY(1,1),
+    OrderID INT,
+    ProductID INT,
+    Quantity INT CHECK (Quantity > 0),
+    PriceAtTimeOfOrder DECIMAL(10, 2),
+    CONSTRAINT FK_OrderItems_Orders FOREIGN KEY (OrderID) REFERENCES Orders(OrderID) ON DELETE CASCADE ON UPDATE NO ACTION, -- Cascade delete to remove items when order is deleted
+    CONSTRAINT FK_OrderItems_Products FOREIGN KEY (ProductID) REFERENCES Products(ProductID) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+-- Create Shipments Table
+CREATE TABLE Shipments (
+    ShipmentID INT PRIMARY KEY IDENTITY(1,1),
+    OrderID INT UNIQUE, -- One shipment per order
+    ShipmentDate DATE,
+    TrackingNumber NVARCHAR(50) UNIQUE,
+    Carrier NVARCHAR(50),
+    CONSTRAINT FK_Shipments_Orders FOREIGN KEY (OrderID) REFERENCES Orders(OrderID) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
