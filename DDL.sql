@@ -1,10 +1,4 @@
 
--- Create database (optional)
-CREATE DATABASE EcommerceDB;
-GO
-USE EcommerceDB;
-GO
-
 -- Customers table
 CREATE TABLE Customers (
     CustomerID INT PRIMARY KEY IDENTITY,
